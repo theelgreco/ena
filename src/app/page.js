@@ -4,9 +4,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
-import { Game } from "@/objects/game";
 import React, { useEffect, useState } from "react";
-import clsx from "clsx";
 
 import JoinGame from "@/components/JoinGame";
 import WaitingRoom from "@/components/WaitingRoom";
@@ -18,8 +16,9 @@ const componentLookup = {
 };
 
 export default function Home() {
-  const [username, setUsername] = useState(null);
   const [game, setGame] = useState(null);
+  const [player, setPlayer] = useState(null);
+  const [mediator, setMediator] = useState(null);
 
   useEffect(() => {
     if (game) {
@@ -27,20 +26,22 @@ export default function Home() {
     }
   }, [game]);
 
+  useEffect(() => {
+    if (player) {
+      console.log(player);
+    }
+  }, [player]);
+
   return (
-    <main className="flex flex-col items-center justify-center min-w-full min-h-full bg-slate-600 px-3">
+    <main className="flex flex-col items-center justify-center min-w-full min-h-full bg-slate-600 px-2">
       {!game ? (
-        <JoinGame
-          game={game}
-          setGame={setGame}
-          username={username}
-          setUsername={setUsername}
-        />
+        <JoinGame game={game} setGame={setGame} setPlayer={setPlayer} setMediator={setMediator} />
       ) : (
         React.createElement(componentLookup[game.status], {
-          username,
+          player,
           game,
           setGame,
+          mediator,
         })
       )}
     </main>
