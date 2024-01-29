@@ -1,10 +1,10 @@
 "use client";
-import { Game, Player, GameMediator } from "@/objects/game";
-import { useState, useEffect } from "react";
+import { GameMediator } from "@/objects/game";
+import { useState } from "react";
 
 import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, TextField } from "@mui/material";
 
-export default function JoinGame({ game, setGame, setPlayer, setMediator }) {
+export default function JoinGame({ game, setGame, setPlayer, setMediator, setStateManager }) {
   const [username, setUsername] = useState(null);
   const [disableButtons, setDisableButtons] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -14,7 +14,7 @@ export default function JoinGame({ game, setGame, setPlayer, setMediator }) {
       setDisableButtons(true);
       try {
         const mediator = new GameMediator(setMediator);
-        mediator.createGame(username, setPlayer, setGame);
+        mediator.createGame(username, setPlayer, setGame, setStateManager);
       } catch (error) {
         console.error(error);
       } finally {
@@ -29,7 +29,7 @@ export default function JoinGame({ game, setGame, setPlayer, setMediator }) {
 
       try {
         const mediator = new GameMediator(setMediator);
-        mediator.joinGame(username, code, setPlayer, setGame);
+        mediator.joinGame(username, code, setPlayer, setGame, setStateManager);
       } catch (error) {
         console.error(error);
       } finally {
