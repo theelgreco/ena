@@ -2,6 +2,8 @@
 import { GameMediator } from "@/objects/game";
 import { useState } from "react";
 
+import Logo from "./Logo";
+
 import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, TextField } from "@mui/material";
 
 export default function JoinGame({ game, setGame, setPlayer, setMediator, setStateManager }) {
@@ -51,16 +53,21 @@ export default function JoinGame({ game, setGame, setPlayer, setMediator, setSta
   }
 
   return (
-    <section className="sm:w-[35%] w-full max-w-sm">
-      <div className="flex flex-col gap-4 w-full flex-wrap justify-center">
-        <input type="text" placeholder="Name" className="p-3 text-3xl rounded-md flex-grow w-full" onChange={handleUsernameInput}></input>
-        <div className="flex flex-row flex-wrap gap-6">
-          <Button variant="contained" className="bg-blue-500 text-white font-bold py-4 px-8 rounded flex-grow max-w-full" onClick={handleModalOpen} disabled={disableButtons}>
-            Join a game
-          </Button>
-          <Button variant="contained" className="bg-blue-500 text-white font-bold py-4 px-8 rounded flex-grow max-w-full" onClick={handleStartGame} disabled={disableButtons}>
-            Start a game
-          </Button>
+    <>
+      <section className="w-full h-full dropped-section">
+        <div className="flex flex-col gap-4 w-full h-full flex-nowrap justify-start items-center">
+          <div className="logo-container">
+            <Logo />
+          </div>
+          <div className="buttons-container flex flex-col gap-4 w-full h-full flex-nowrap justify-start items-center scrollbar-none overflow-y-auto">
+            <input type="text" placeholder="Name" className="p-3 text-3xl rounded-md mb-3" onChange={handleUsernameInput}></input>
+            <button className="main-button click-buttons cartoon-text" onClick={handleModalOpen} disabled={disableButtons}>
+              Join game
+            </button>
+            <button className="main-button click-buttons cartoon-text" onClick={handleStartGame} disabled={disableButtons}>
+              Create game
+            </button>
+          </div>
 
           <Dialog
             open={modalOpen}
@@ -90,7 +97,7 @@ export default function JoinGame({ game, setGame, setPlayer, setMediator, setSta
             </DialogActions>
           </Dialog>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

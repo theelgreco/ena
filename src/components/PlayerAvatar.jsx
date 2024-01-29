@@ -1,9 +1,18 @@
 import clsx from "clsx";
 
-export default function PlayerAvatar({ username, active }) {
+export default function PlayerAvatar({ username, active, joined }) {
   return (
-    <div className={clsx("border-[3px] border-black w-[120px] h-[120px] bg-slate-600 rounded-xl grid place-items-center", active && "border-8 border-green-500 bg-green-700")}>
-      <p>{username}</p>
+    <div className={clsx("player-icon", joined && "joined")}>
+      {joined ? (
+        <div className="flex flex-col flex-nowrap">
+          <img src="/images/Zoe.png" />
+          <div className="name-bar cartoon-text">
+            <p>{username}</p>
+          </div>
+        </div>
+      ) : (
+        <></>
+      )}
     </div>
   );
 }

@@ -51,7 +51,7 @@ export default function Home() {
   }, [stateManager]);
 
   return (
-    <main className="flex flex-col items-center justify-center min-w-full min-h-full bg-slate-600 px-2">
+    <main className="w-full h-full max-w-full max-h-full pt-24 home-screen-pb home-screen-px relative">
       {!game ? (
         <JoinGame game={game} setGame={setGame} setPlayer={setPlayer} setMediator={setMediator} setStateManager={setStateManager} />
       ) : (
