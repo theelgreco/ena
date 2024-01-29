@@ -1,15 +1,17 @@
-import { db, gamesCollection, metaCollection } from "@/firebase";
+import { gamesCollection, metaCollection } from "@/firebase";
 import { doc, updateDoc, getDoc, setDoc, onSnapshot } from "@firebase/firestore";
 import { isEqual } from "lodash";
+import { useState } from "react";
 
 export class Game {
-  constructor(gameState, setGame, mediator) {
+  constructor(gameState, setGame, mediator, stateManager) {
     for (const key in gameState) {
       this[key] = gameState[key];
     }
 
     this.setGame = setGame;
     this.mediator = mediator;
+    this.stateManager = stateManager;
 
     this.mediator.registerGame(this);
     this.setGame(this);
@@ -18,6 +20,7 @@ export class Game {
   getGameStateFields() {
     return {
       capacity: this.capacity,
+      direction: this.direction,
       code: this.code,
       currentCard: this.currentCard,
       currentPlayer: this.currentPlayer,
@@ -59,10 +62,6 @@ export class Game {
     }
   }
 
-  updateState() {
-    new Game(this.getGameStateFields(), this.setGame, this.mediator);
-  }
-
   static generateCode() {
     const codeArray = [];
 
@@ -75,13 +74,14 @@ export class Game {
 }
 
 export class Player {
-  constructor(username, setPlayer, mediator, hand = [], host = false, selected = []) {
+  constructor(username, setPlayer, mediator, hand = [], host = false, selected = [], stateManager) {
     this.username = username;
     this.setPlayer = setPlayer;
     this.hand = hand;
     this.selected = selected;
     this.host = host;
     this.mediator = mediator;
+    this.stateManager = stateManager;
 
     this.mediator.registerPlayer(this);
     this.setPlayer(this);
@@ -93,8 +93,6 @@ export class Player {
     } else {
       this.selectCard(card);
     }
-
-    console.log(this.selected);
   }
 
   deselectCard(card) {
@@ -103,18 +101,35 @@ export class Player {
     });
 
     this.selected.splice(indexOfCard, 1);
+
+    if (!this.selected.length) {
+      this.stateManager.setHasSelected(false);
+    }
   }
 
   selectCard(card) {
     this.selected.push(card);
+
+    if (!this.stateManager.hasSelected) {
+      this.stateManager.setHasSelected(true);
+    }
   }
 
-  async takeTurn() {
-    await this.mediator.takeTurn();
+  async playTurn() {
+    await this.mediator.playTurn();
+
+    this.stateManager.resetTurnState();
   }
 
   async drawCard() {
     await this.mediator.drawCard();
+    this.stateManager.setHasDrawn(true);
+  }
+
+  async passTurn() {
+    await this.mediator.passTurn();
+
+    this.stateManager.resetTurnState();
   }
 }
 
@@ -131,7 +146,7 @@ export class GameMediator {
     this.setMediator(this);
   }
 
-  async createGame(username, setPlayer, setGame) {
+  async createGame(username, setPlayer, setGame, setStateManager) {
     let code = Game.generateCode();
 
     this.gameDoc = doc(gamesCollection, code);
@@ -142,6 +157,7 @@ export class GameMediator {
     const gameState = {
       code,
       status: "waiting",
+      direction: "forwards",
       capacity: 4,
       currentPlayer: null,
       currentCard: null,
@@ -157,13 +173,14 @@ export class GameMediator {
 
     await setDoc(this.gameDoc, gameState);
 
-    new Game(gameState, setGame, this);
-    new Player(username, setPlayer, this, [], true, []);
+    const stateManager = new StateManager(this, setStateManager);
+    new Game(gameState, setGame, this, stateManager);
+    new Player(username, setPlayer, this, [], true, [], stateManager);
 
     this.registerUpdateListener();
   }
 
-  async joinGame(username, code, setPlayer, setGame) {
+  async joinGame(username, code, setPlayer, setGame, setStateManager) {
     this.gameDoc = doc(gamesCollection, code);
 
     const gameState = (await getDoc(this.gameDoc)).data();
@@ -177,8 +194,9 @@ export class GameMediator {
 
     await updateDoc(this.gameDoc, gameState);
 
-    new Game(gameState, setGame, this);
-    new Player(username, setPlayer, this, [], false, []);
+    const stateManager = new StateManager(this, setStateManager);
+    new Game(gameState, setGame, this, stateManager);
+    new Player(username, setPlayer, this, [], false, [], stateManager);
 
     this.registerUpdateListener();
   }
@@ -194,46 +212,86 @@ export class GameMediator {
     this.setMediator(null);
   }
 
-  async takeTurn() {
-    if (this.validateTurn()) {
-      console.log("valid turn");
-      const gameObjCopy = JSON.parse(JSON.stringify(this.game.getGameStateFields()));
+  async playTurn() {
+    console.log("valid turn");
+    const gameObjCopy = JSON.parse(JSON.stringify(this.game.getGameStateFields()));
 
-      const lastSelectedCardIndex = this.player.selected[this.player.selected.length - 1];
-      const lastSelectedCardObj = gameObjCopy.players[this.playerIndex].hand[lastSelectedCardIndex];
-      const updatedHand = [];
+    const nextPlayer = gameObjCopy.players[(this.playerIndex + 1) % this.game.capacity];
+    let playerIncrementAmount = 1;
 
-      for (let i = 0; i < this.player.hand.length; i++) {
-        if (!this.player.selected.includes(i)) {
-          const currentCard = this.player.hand[i];
-          updatedHand.push(currentCard);
-        }
+    const lastSelectedCardIndex = this.player.selected[this.player.selected.length - 1];
+    const lastSelectedCardObj = gameObjCopy.players[this.playerIndex].hand[lastSelectedCardIndex];
+    const updatedHand = [];
+
+    for (let i = 0; i < this.player.hand.length; i++) {
+      if (!this.player.selected.includes(i)) {
+        const currentCard = this.player.hand[i];
+        updatedHand.push(currentCard);
       }
-
-      for (let i = 0; i < this.player.selected.length; i++) {
-        const currentCardIndex = this.player.selected[i];
-        const currentCardObj = gameObjCopy.players[this.playerIndex].hand[currentCardIndex];
-
-        gameObjCopy.playedPile.push(currentCardObj);
-      }
-
-      gameObjCopy.players[this.playerIndex].hand = updatedHand;
-      gameObjCopy.currentPlayer = (this.game.currentPlayer + 1) % gameObjCopy.capacity;
-      gameObjCopy.currentCard = lastSelectedCardObj;
-      this.player.selected = [];
-
-      await updateDoc(this.gameDoc, gameObjCopy);
-    } else {
-      console.log("invalid turn");
     }
+
+    for (let i = 0; i < this.player.selected.length; i++) {
+      const currentCardIndex = this.player.selected[i];
+      const currentCardObj = gameObjCopy.players[this.playerIndex].hand[currentCardIndex];
+
+      gameObjCopy.playedPile.push(currentCardObj);
+    }
+
+    switch (lastSelectedCardObj.value) {
+      case "skip":
+        playerIncrementAmount++;
+        break;
+      case "switch":
+        gameObjCopy.direction = gameObjCopy.direction === "reverse" ? "forwards" : "reverse";
+        break;
+      case "+2":
+        nextPlayer.hand.push(gameObjCopy.drawPile.pop());
+        nextPlayer.hand.push(gameObjCopy.drawPile.pop());
+        break;
+      case "+4":
+        nextPlayer.hand.push(gameObjCopy.drawPile.pop());
+        nextPlayer.hand.push(gameObjCopy.drawPile.pop());
+        nextPlayer.hand.push(gameObjCopy.drawPile.pop());
+        nextPlayer.hand.push(gameObjCopy.drawPile.pop());
+        break;
+    }
+
+    gameObjCopy.currentPlayer = this.getNextPlayer(gameObjCopy, playerIncrementAmount);
+
+    gameObjCopy.players[this.playerIndex].hand = updatedHand;
+    gameObjCopy.currentCard = lastSelectedCardObj;
+    this.player.selected = [];
+
+    await updateDoc(this.gameDoc, gameObjCopy);
   }
 
   async drawCard() {
     const gameObjCopy = JSON.parse(JSON.stringify(this.game.getGameStateFields()));
     const topCard = gameObjCopy.drawPile.pop();
+    const newHand = [...this.player.hand, topCard];
     // TO-DO: handle case where topCard is undefined because drawPile is empty
-    gameObjCopy.players[this.playerIndex].hand.push(topCard);
+
+    gameObjCopy.players[this.playerIndex].hand = newHand;
     await updateDoc(this.gameDoc, gameObjCopy);
+
+    this.stateManager.setHasDrawn(false);
+  }
+
+  async passTurn() {
+    const gameObjCopy = JSON.parse(JSON.stringify(this.game.getGameStateFields()));
+
+    gameObjCopy.currentPlayer = this.getNextPlayer(gameObjCopy, 1);
+
+    await updateDoc(this.gameDoc, gameObjCopy);
+  }
+
+  getNextPlayer(gameState, playerIncrementAmount) {
+    if (gameState.direction === "reverse") {
+      const num = gameState.currentPlayer - playerIncrementAmount;
+      return num < 0 ? gameState.capacity + num : num;
+    } else {
+      return (gameState.currentPlayer = (gameState.currentPlayer + playerIncrementAmount) % gameState.capacity);
+    }
   }
 
   validateTurn() {
@@ -262,11 +320,17 @@ export class GameMediator {
 
   registerGame(game) {
     this.game = game;
+    this.stateManager.game = game;
   }
 
   registerPlayer(player) {
     this.player = player;
+    this.stateManager.player = player;
     this.playerIndex = this.getPlayerIndex();
+  }
+
+  registerStateManager(stateManager) {
+    this.stateManager = stateManager;
   }
 
   getPlayerIndex() {
@@ -292,34 +356,10 @@ export class GameMediator {
   // this will listen to the database and make the changes to the object whenever a change on the backend is made
   async registerUpdateListener() {
     const handleSnapshot = async (docSnapshot) => {
-      const lastGameState = this.game.getGameStateFields();
       const updatedGameState = docSnapshot.data();
+      const lastGameState = this.game.getGameStateFields();
 
-      console.log(updatedGameState.players[this.playerIndex].hand, this.player.hand);
-
-      if (lastGameState.status === "waiting" && updatedGameState.status === "playing") {
-        this.orderOfPlayers = this.getOrderOfPlayers(updatedGameState);
-      }
-
-      if (this.player.host && updatedGameState.status === "waiting" && updatedGameState.players.length === updatedGameState.capacity) {
-        this.game.shuffleCards(updatedGameState.drawPile);
-        this.game.dealCards(updatedGameState);
-        this.game.drawFirstCard(updatedGameState);
-        updatedGameState.currentPlayer = 0;
-        updatedGameState.status = "playing";
-        await updateDoc(this.gameDoc, updatedGameState);
-        return;
-      }
-
-      if (!isEqual(updatedGameState, lastGameState)) {
-        console.log("updating game state");
-        new Game(updatedGameState, this.game.setGame, this);
-      }
-
-      if (!isEqual(updatedGameState.players[this.playerIndex].hand, this.player.hand)) {
-        console.log("updating player state");
-        new Player(this.player.username, this.player.setPlayer, this, updatedGameState.players[this.playerIndex].hand, this.player.host, this.player.selected);
-      }
+      this.stateManager.compareGameState(updatedGameState, lastGameState);
     };
 
     const unsubscribe = onSnapshot(this.gameDoc, handleSnapshot);
@@ -327,6 +367,137 @@ export class GameMediator {
   }
 }
 
-class StateManager {
-  compareGamestate(oldGameState, newGameState) {}
+export class StateManager {
+  constructor(mediator, setStateManager) {
+    this.mediator = mediator;
+    this.game = null;
+    this.player = null;
+
+    this.setStateManager = setStateManager;
+
+    this.setPlayerHand = null;
+    this.setCurrentCard = null;
+    this.setCurrentPlayer = null;
+    this.setPlayers = null;
+    this.setStatus = null;
+
+    this.mediator.registerStateManager(this);
+    this.setStateManager(this);
+  }
+
+  registerGameState() {
+    const [hasSelected, setHasSelected] = useState(false);
+    this.hasSelected = hasSelected;
+    this.setHasSelected = setHasSelected;
+
+    const [hasDrawn, setHasDrawn] = useState(false);
+    this.hasDrawn = hasDrawn;
+    this.setHasDrawn = setHasDrawn;
+
+    const [colourChoiceOpen, setColourChoiceOpen] = useState(false);
+    this.colourChoiceOpen = colourChoiceOpen;
+    this.setColourChoiceOpen = setColourChoiceOpen;
+  }
+
+  resetTurnState() {
+    if (this.hasSelected) {
+      this.setHasSelected(false);
+    }
+
+    if (this.hasDrawn) {
+      this.setHasDrawn(false);
+    }
+  }
+
+  async compareGameState(updatedGameState, lastGameState) {
+    if (lastGameState.status === "waiting" && updatedGameState.status === "playing") {
+      this.mediator.orderOfPlayers = this.mediator.getOrderOfPlayers(updatedGameState);
+
+      for (let key in updatedGameState) {
+        this.game[key] = updatedGameState[key];
+      }
+
+      this.player.hand = updatedGameState.players[this.mediator.playerIndex].hand;
+
+      this.setPlayerHand(updatedGameState.players[this.mediator.playerIndex].hand);
+      this.setStatus(updatedGameState.status);
+    }
+
+    if (this.player.host && updatedGameState.status === "waiting" && updatedGameState.players.length === updatedGameState.capacity) {
+      this.game.shuffleCards(updatedGameState.drawPile);
+      this.game.dealCards(updatedGameState);
+      this.game.drawFirstCard(updatedGameState);
+      updatedGameState.currentPlayer = 0;
+      updatedGameState.status = "playing";
+      await updateDoc(this.mediator.gameDoc, updatedGameState);
+      return;
+    }
+
+    if (!isEqual(updatedGameState.currentCard, lastGameState.currentCard)) {
+      console.log("Updating: current card");
+      this.game.currentCard = updatedGameState.currentCard;
+      this.setCurrentCard(updatedGameState.currentCard);
+    }
+
+    if (!isEqual(updatedGameState.currentPlayer, lastGameState.currentPlayer)) {
+      console.log("Updating: current player");
+
+      this.game.currentPlayer = updatedGameState.currentPlayer;
+      this.setCurrentPlayer(updatedGameState.currentPlayer);
+    }
+
+    if (!isEqual(updatedGameState.drawPile, lastGameState.drawPile)) {
+      console.log("Updating: draw pile");
+
+      this.game.drawPile = updatedGameState.drawPile;
+    }
+
+    if (!isEqual(updatedGameState.playedPile, lastGameState.playedPile)) {
+      console.log("Updating: played pile");
+
+      this.game.playedPile = updatedGameState.playedPile;
+    }
+
+    if (!isEqual(updatedGameState.players.length, lastGameState.players.length)) {
+      console.log("Updating: number of players");
+
+      this.game.players = updatedGameState.players;
+      this.setPlayers(updatedGameState.players);
+    }
+
+    if (!isEqual(updatedGameState.players[this.mediator.playerIndex].hand, this.player.hand)) {
+      console.log("Updating: hand");
+
+      this.player.hand = updatedGameState.players[this.mediator.playerIndex].hand;
+      this.setPlayerHand(updatedGameState.players[this.mediator.playerIndex].hand);
+    }
+
+    if (!isEqual(updatedGameState.players, this.game.players)) {
+      console.log("Updating: players");
+      this.game.players = updatedGameState.players;
+    }
+
+    if (!isEqual(updatedGameState.direction, this.game.direction)) {
+      console.log("Switching direction");
+      this.game.direction = updatedGameState.direction;
+    }
+  }
+}
+
+function animationFunc(fromElement, moveElement, reverse = false) {
+  const { left: fromLeft, top: fromTop } = fromElement.getBoundingClientRect();
+  const { left: toLeft, top: toTop } = moveElement.getBoundingClientRect();
+
+  const startingPositionLeft = toLeft - fromLeft;
+  const startingPositionTop = toTop - fromTop;
+
+  const animationKeyframes = [{ transform: `translate(${-startingPositionLeft}px, ${-startingPositionTop}px)` }, { transform: "translate(0px, 0px)" }];
+  const animationOptions = { duration: 400, fill: "forwards" };
+
+  if (reverse) {
+    const anim = moveElement.animate(animationKeyframes, animationOptions);
+    anim.reverse();
+  } else {
+    moveElement.animate(animationKeyframes, animationOptions);
+  }
 }

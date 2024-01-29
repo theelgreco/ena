@@ -25,6 +25,10 @@ body {
   font-family: "roboto";
 }
 
+img {
+  -webkit-user-drag: none;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

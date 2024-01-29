@@ -19,6 +19,13 @@ export default function Home() {
   const [game, setGame] = useState(null);
   const [player, setPlayer] = useState(null);
   const [mediator, setMediator] = useState(null);
+  const [stateManager, setStateManager] = useState(null);
+
+  const [players, setPlayers] = useState([]);
+  const [status, setStatus] = useState("waiting");
+  const [playerHand, setPlayerHand] = useState([]);
+  const [currentPlayer, setCurrentPlayer] = useState(0);
+  const [currentCard, setCurrentCard] = useState(null);
 
   useEffect(() => {
     if (game) {
@@ -32,16 +39,31 @@ export default function Home() {
     }
   }, [player]);
 
+  useEffect(() => {
+    if (stateManager) {
+      stateManager.setPlayers = setPlayers;
+      stateManager.setStatus = setStatus;
+      stateManager.setPlayerHand = setPlayerHand;
+      stateManager.setCurrentPlayer = setCurrentPlayer;
+      stateManager.setCurrentCard = setCurrentCard;
+      stateManager.setPlayers(game.players);
+    }
+  }, [stateManager]);
+
   return (
     <main className="flex flex-col items-center justify-center min-w-full min-h-full bg-slate-600 px-2">
       {!game ? (
-        <JoinGame game={game} setGame={setGame} setPlayer={setPlayer} setMediator={setMediator} />
+        <JoinGame game={game} setGame={setGame} setPlayer={setPlayer} setMediator={setMediator} setStateManager={setStateManager} />
       ) : (
-        React.createElement(componentLookup[game.status], {
+        React.createElement(componentLookup[status], {
           player,
+          players,
+          playerHand,
+          currentPlayer,
+          currentCard,
           game,
-          setGame,
           mediator,
+          stateManager,
         })
       )}
     </main>
