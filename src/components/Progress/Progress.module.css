@@ -1,0 +1,34 @@
+.timer-container {
+  position: relative;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.timer-progress,
+.timer-outline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 9999px;
+  opacity: 1;
+}
+
+.timer-outline {
+  width: 100%;
+  box-shadow: inset 0 0 5px 0px rgb(0, 0, 0, 0.5);
+}
+
+.timer-progress {
+  background-color: green;
+  background-image: repeating-linear-gradient(-45deg, #444cf750, #444cf750 2px, #e5e5f750 2px, #e5e5f750 15px);
+  transition: width 1s linear, background-color 1s ease-in;
+  animation: fade 1s ease-in infinite;
+  animation-direction: alternate;
+}
+
+@keyframes fade {
+  to {
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,5 @@
+.card-selected {
+  translate: 0 -30%;
+  outline: 2px solid gold;
+  border-radius: 4px;
+}

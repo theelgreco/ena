@@ -1,22 +1,26 @@
 "use client";
-import { GameMediator } from "@/objects/game";
 import { useState } from "react";
 
-import Logo from "./Logo";
-
+import { GameMediator } from "@/objects/game";
 import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, TextField } from "@mui/material";
+import { signUserOut } from "@/firebase/authentication";
 
-export default function JoinGame({ game, setGame, setPlayer, setMediator, setStateManager }) {
-  const [username, setUsername] = useState(null);
+import Logo from "../Logo/Logo";
+import PlayerAvatar from "../PlayerAvatar/PlayerAvatar";
+import CapacityPopup from "../CapacityPopup/CapacityPopup";
+
+export default function HomeScreen({ game, setGame, setPlayer, setMediator, setStateManager, user, setUser }) {
   const [disableButtons, setDisableButtons] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  async function handleStartGame() {
-    if (!game && username) {
+  const [capacityPopupOpen, setCapacityPopupOpen] = useState(false);
+
+  async function handleStartGame(capacity) {
+    if (!game && user.displayName) {
       setDisableButtons(true);
       try {
         const mediator = new GameMediator(setMediator);
-        mediator.createGame(username, setPlayer, setGame, setStateManager);
+        mediator.createGame(capacity, user.displayName, user.photoURL, setPlayer, setGame, setStateManager);
       } catch (error) {
         console.error(error);
       } finally {
@@ -26,12 +30,12 @@ export default function JoinGame({ game, setGame, setPlayer, setMediator, setSta
   }
 
   async function handleJoinGame(code) {
-    if (!game && username) {
+    if (!game && user.displayName) {
       setDisableButtons(true);
 
       try {
         const mediator = new GameMediator(setMediator);
-        mediator.joinGame(username, code, setPlayer, setGame, setStateManager);
+        mediator.joinGame(user.displayName, user.photoURL, code, setPlayer, setGame, setStateManager);
       } catch (error) {
         console.error(error);
       } finally {
@@ -48,8 +52,12 @@ export default function JoinGame({ game, setGame, setPlayer, setMediator, setSta
     setModalOpen(false);
   }
 
-  function handleUsernameInput(e) {
-    setUsername(e.target.value);
+  function handleCapacityClose(value) {
+    if (value) {
+      handleStartGame(value);
+    } else {
+      setCapacityPopupOpen(false);
+    }
   }
 
   return (
@@ -60,12 +68,26 @@ export default function JoinGame({ game, setGame, setPlayer, setMediator, setSta
             <Logo />
           </div>
           <div className="buttons-container flex flex-col gap-4 w-full h-full flex-nowrap justify-start items-center scrollbar-none overflow-y-auto">
-            <input type="text" placeholder="Name" className="p-3 text-3xl rounded-md mb-3" onChange={handleUsernameInput}></input>
-            <button className="main-button click-buttons cartoon-text" onClick={handleModalOpen} disabled={disableButtons}>
+            <PlayerAvatar username={user.displayName} photoURL={user.photoURL} signedIn={true} />
+            <button className="main-button click-buttons cartoon-text mt-5" onClick={handleModalOpen} disabled={disableButtons}>
               Join game
             </button>
-            <button className="main-button click-buttons cartoon-text" onClick={handleStartGame} disabled={disableButtons}>
+            <button
+              className="main-button click-buttons cartoon-text"
+              onClick={() => {
+                setCapacityPopupOpen(true);
+              }}
+              disabled={disableButtons}
+            >
               Create game
+            </button>
+            <button
+              onClick={async () => {
+                await signUserOut(setUser);
+              }}
+              className="leave-button cartoon-text"
+            >
+              Sign out
             </button>
           </div>
 
@@ -96,6 +118,7 @@ export default function JoinGame({ game, setGame, setPlayer, setMediator, setSta
               <Button type="submit">Join</Button>
             </DialogActions>
           </Dialog>
+          <CapacityPopup onClose={handleCapacityClose} selectedValue={null} open={capacityPopupOpen} />
         </div>
       </section>
     </>

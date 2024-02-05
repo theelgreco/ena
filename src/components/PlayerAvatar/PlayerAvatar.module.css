@@ -1,0 +1,41 @@
+.player-icon {
+  width: 150px;
+  height: 150px;
+  display: grid;
+  place-items: center;
+  max-width: 90%;
+  border-radius: var(--second-radius);
+}
+
+.player-icon:not(.joined):not(.in-game) {
+  background-color: rgb(93, 84, 49, 40%);
+  box-shadow: var(--inset-blurred-box-shadow);
+}
+
+.player-icon.joined:not(.in-game) {
+  box-shadow: var(--blurred-box-shadow);
+  background-image: var(--main-gradient);
+  border: 2px solid var(--main-border-colour);
+}
+
+.player-icon img {
+  width: 65%;
+  margin: auto;
+  box-shadow: var(--blurred-box-shadow);
+  border-radius: 50px;
+  margin-bottom: -15px;
+  border: 2px solid var(--main-border-colour);
+}
+
+.player-icon .name-bar {
+  position: relative;
+  width: 65%;
+  height: 30px;
+  margin: auto;
+  text-align: center;
+  background-image: var(--main-gradient);
+  box-shadow: var(--blurred-box-shadow);
+  z-index: 1;
+  border-radius: 3px;
+  border: 2px solid var(--main-border-colour);
+}

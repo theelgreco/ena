@@ -1,10 +1,14 @@
 import { Button } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import Banner from "./Banner";
-import PlayerAvatar from "./PlayerAvatar";
+import Banner from "../Banner/Banner";
+import PlayerAvatar from "../PlayerAvatar/PlayerAvatar";
 
 export default function WaitingRoom({ players, game, mediator }) {
   const numPlayers = Array.from({ length: game.capacity });
+
+  async function handleLeave() {
+    await mediator.leaveGame();
+  }
 
   return (
     <section className="w-full h-full dropped-section">
@@ -25,15 +29,17 @@ export default function WaitingRoom({ players, game, mediator }) {
         <div className="banner-container">
           <Banner game={game} players={players} />
         </div>
-        <button className="leave-button cartoon-text">Leave</button>
-        <div className="flex flex-row flex-wrap justify-between items-center w-full h-full overflow-y-auto scrollbar-none">
+        <button onClick={handleLeave} className="leave-button cartoon-text">
+          Leave
+        </button>
+        <div className="flex flex-row flex-wrap justify-center items-center w-full h-full overflow-y-auto scrollbar-none">
           {numPlayers.map((place, index) => {
             return players[index] ? (
-              <div key={index} className="min-w-[33%] mx-auto my-6 grid place-items-center">
-                <PlayerAvatar username={players[index].username} joined={true} />
+              <div key={index} className="min-w-[30%] mx-6 my-6 grid place-items-center">
+                <PlayerAvatar username={players[index].username} photoURL={players[index].photoURL} joined={true} />
               </div>
             ) : (
-              <div className="min-w-[33%] mx-auto my-6 grid place-items-center">
+              <div key={index} className="min-w-[30%] mx-6 my-6 grid place-items-center">
                 <PlayerAvatar joined={false} />
               </div>
             );

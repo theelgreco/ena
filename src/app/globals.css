@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Indigo Regular";
+  src: url("/fonts/Indigo-Regular.otf") format("opentype");
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-theme: #d53030;
@@ -21,6 +26,7 @@ body {
   height: 100svh;
   overflow: hidden;
   font-family: "roboto";
+  orientation: portrait;
 }
 
 img {
@@ -142,45 +148,6 @@ img {
     box-shadow: 4px 0px 6px 0px rgba(0, 0, 0, 0.5), inset 5px 0px 6px 0px rgba(0, 0, 0, 0.25);
     transform: translate(0, -50%);
   }
-
-  .player-icon {
-    width: 150px;
-    height: 150px;
-    display: grid;
-    place-items: center;
-    max-width: 90%;
-    border-radius: var(--second-radius);
-    background-color: rgb(93, 84, 49, 40%);
-    box-shadow: var(--inset-blurred-box-shadow);
-  }
-
-  .player-icon.joined {
-    box-shadow: var(--blurred-box-shadow);
-    background-image: var(--main-gradient);
-    border: 2px solid var(--main-border-colour);
-  }
-
-  .player-icon img {
-    width: 65%;
-    margin: auto;
-    box-shadow: var(--blurred-box-shadow);
-    border-radius: 50px;
-    margin-bottom: -15px;
-    border: 2px solid var(--main-border-colour);
-  }
-
-  .player-icon .name-bar {
-    position: relative;
-    width: 65%;
-    height: 30px;
-    margin: auto;
-    text-align: center;
-    background-image: var(--main-gradient);
-    box-shadow: var(--blurred-box-shadow);
-    z-index: 1;
-    border-radius: 3px;
-    border: 2px solid var(--main-border-colour);
-  }
 }
 
 @layer utilities {
@@ -201,6 +168,11 @@ img {
     padding-right: min(2.5rem, 3vw);
   }
 
+  .home-screen-py {
+    padding-top: min(2.5rem, 3vw);
+    padding-bottom: min(2.5rem, 3vw);
+  }
+
   .cartoon-text {
     color: white;
     font-family: "Indigo Regular";
@@ -212,6 +184,10 @@ img {
     width: 0;
     height: 0;
   }
+
+  .main-input {
+    color: white !important;
+  }
 }
 
 .posting::after {
@@ -220,6 +196,10 @@ img {
   animation-duration: 1s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
+}
+
+input:autofill {
+  color: white !important;
 }
 
 @keyframes dotdotdot {
