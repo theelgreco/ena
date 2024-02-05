@@ -1,4 +1,4 @@
-import { gamesCollection, metaCollection } from "@/firebase";
+import { gamesCollection, metaCollection } from "@/firebase/db";
 import { doc, updateDoc, getDoc, setDoc, onSnapshot } from "@firebase/firestore";
 import { isEqual } from "lodash";
 import { useState } from "react";
@@ -9,6 +9,7 @@ export class Game {
       this[key] = gameState[key];
     }
 
+    this.status = null;
     this.setGame = setGame;
     this.mediator = mediator;
     this.stateManager = stateManager;
@@ -43,7 +44,7 @@ export class Game {
 
   dealCards(gameState) {
     for (let i = 0; i < 7; i++) {
-      for (let j = 0; j < 4; j++) {
+      for (let j = 0; j < gameState.capacity; j++) {
         const topCard = gameState.drawPile.pop();
         gameState.players[j].hand.push(topCard);
       }
@@ -146,7 +147,7 @@ export class GameMediator {
     this.setMediator(this);
   }
 
-  async createGame(username, setPlayer, setGame, setStateManager) {
+  async createGame(capacity, username, photoURL, setPlayer, setGame, setStateManager) {
     let code = Game.generateCode();
 
     this.gameDoc = doc(gamesCollection, code);
@@ -156,9 +157,9 @@ export class GameMediator {
 
     const gameState = {
       code,
-      status: "waiting",
+      status: null,
       direction: "forwards",
-      capacity: 4,
+      capacity,
       currentPlayer: null,
       currentCard: null,
       drawPile,
@@ -166,6 +167,7 @@ export class GameMediator {
       players: [
         {
           username: username,
+          photoURL: photoURL,
           hand: [],
         },
       ],
@@ -178,9 +180,11 @@ export class GameMediator {
     new Player(username, setPlayer, this, [], true, [], stateManager);
 
     this.registerUpdateListener();
+
+    await updateDoc(this.gameDoc, { status: "waiting" });
   }
 
-  async joinGame(username, code, setPlayer, setGame, setStateManager) {
+  async joinGame(username, photoURL, code, setPlayer, setGame, setStateManager) {
     this.gameDoc = doc(gamesCollection, code);
 
     const gameState = (await getDoc(this.gameDoc)).data();
@@ -188,17 +192,17 @@ export class GameMediator {
     if (gameState.players.length <= gameState.capacity) {
       gameState.players.push({
         username,
+        photoURL: photoURL,
         hand: [],
       });
     }
-
-    await updateDoc(this.gameDoc, gameState);
 
     const stateManager = new StateManager(this, setStateManager);
     new Game(gameState, setGame, this, stateManager);
     new Player(username, setPlayer, this, [], false, [], stateManager);
 
     this.registerUpdateListener();
+    await updateDoc(this.gameDoc, gameState);
   }
 
   async leaveGame() {
@@ -207,17 +211,16 @@ export class GameMediator {
     this.unsubscribe();
     await updateDoc(this.gameDoc, this.game.getGameStateFields());
 
-    this.game.setGame(null);
-    this.player.setPlayer(null);
-    this.setMediator(null);
+    this.stateManager.initialiseState();
   }
 
   async playTurn() {
-    console.log("valid turn");
     const gameObjCopy = JSON.parse(JSON.stringify(this.game.getGameStateFields()));
 
-    const nextPlayer = gameObjCopy.players[(this.playerIndex + 1) % this.game.capacity];
     let playerIncrementAmount = 1;
+
+    const nextPlayerIndex = this.getNextPlayerIndex(gameObjCopy, playerIncrementAmount);
+    const nextPlayer = gameObjCopy.players[nextPlayerIndex];
 
     const lastSelectedCardIndex = this.player.selected[this.player.selected.length - 1];
     const lastSelectedCardObj = gameObjCopy.players[this.playerIndex].hand[lastSelectedCardIndex];
@@ -256,7 +259,7 @@ export class GameMediator {
         break;
     }
 
-    gameObjCopy.currentPlayer = this.getNextPlayer(gameObjCopy, playerIncrementAmount);
+    gameObjCopy.currentPlayer = this.getNextPlayerIndex(gameObjCopy, playerIncrementAmount);
 
     gameObjCopy.players[this.playerIndex].hand = updatedHand;
     gameObjCopy.currentCard = lastSelectedCardObj;
@@ -280,17 +283,17 @@ export class GameMediator {
   async passTurn() {
     const gameObjCopy = JSON.parse(JSON.stringify(this.game.getGameStateFields()));
 
-    gameObjCopy.currentPlayer = this.getNextPlayer(gameObjCopy, 1);
+    gameObjCopy.currentPlayer = this.getNextPlayerIndex(gameObjCopy, 1);
 
     await updateDoc(this.gameDoc, gameObjCopy);
   }
 
-  getNextPlayer(gameState, playerIncrementAmount) {
+  getNextPlayerIndex(gameState, playerIncrementAmount) {
     if (gameState.direction === "reverse") {
       const num = gameState.currentPlayer - playerIncrementAmount;
       return num < 0 ? gameState.capacity + num : num;
     } else {
-      return (gameState.currentPlayer = (gameState.currentPlayer + playerIncrementAmount) % gameState.capacity);
+      return (gameState.currentPlayer + playerIncrementAmount) % gameState.capacity;
     }
   }
 
@@ -343,11 +346,11 @@ export class GameMediator {
     const order = [];
 
     for (let i = this.playerIndex; i < gameState.capacity; i++) {
-      order.push(gameState.players[i]);
+      order.push({ ...gameState.players[i], playerIndex: i });
     }
 
     for (let i = 0; i < this.playerIndex; i++) {
-      order.push(gameState.players[i]);
+      order.push({ ...gameState.players[i], playerIndex: i });
     }
 
     return order;
@@ -365,15 +368,22 @@ export class GameMediator {
     const unsubscribe = onSnapshot(this.gameDoc, handleSnapshot);
     this.unsubscribe = unsubscribe;
   }
+
+  async getGameStateAfterReturningToTab() {
+    const updatedGameState = (await getDoc(this.gameDoc)).data();
+    const lastGameState = this.game.getGameStateFields();
+
+    this.stateManager.compareGameState(updatedGameState, lastGameState);
+  }
 }
 
 export class StateManager {
   constructor(mediator, setStateManager) {
     this.mediator = mediator;
+    this.setStateManager = setStateManager;
+
     this.game = null;
     this.player = null;
-
-    this.setStateManager = setStateManager;
 
     this.setPlayerHand = null;
     this.setCurrentCard = null;
@@ -383,6 +393,22 @@ export class StateManager {
 
     this.mediator.registerStateManager(this);
     this.setStateManager(this);
+  }
+
+  initialiseState() {
+    this.game.setGame(null);
+    this.player.setPlayer(null);
+    this.mediator.setMediator(null);
+
+    this.game = null;
+    this.player = null;
+    this.mediator = null;
+
+    this.setPlayerHand(null);
+    this.setCurrentCard(null);
+    this.setCurrentPlayer(null);
+    this.setPlayers(null);
+    this.setStatus(null);
   }
 
   registerGameState() {
@@ -418,8 +444,12 @@ export class StateManager {
       }
 
       this.player.hand = updatedGameState.players[this.mediator.playerIndex].hand;
+      this.game.status = updatedGameState.status;
 
       this.setPlayerHand(updatedGameState.players[this.mediator.playerIndex].hand);
+      this.setStatus(updatedGameState.status);
+    } else if (this.game.status !== updatedGameState.status) {
+      this.game.status = updatedGameState.status;
       this.setStatus(updatedGameState.status);
     }
 
