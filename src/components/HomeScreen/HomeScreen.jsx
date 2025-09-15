@@ -1,10 +1,8 @@
 "use client";
 import { useState } from "react";
-
 import { GameMediator } from "@/objects/game";
 import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, TextField } from "@mui/material";
-import { signUserOut } from "@/firebase/authentication";
-
+import { signUserOut } from "@/firebase/authentication/authentication";
 import Logo from "../Logo/Logo";
 import PlayerAvatar from "../PlayerAvatar/PlayerAvatar";
 import CapacityPopup from "../CapacityPopup/CapacityPopup";
