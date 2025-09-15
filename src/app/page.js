@@ -11,7 +11,7 @@ import WaitingRoom from "@/components/WaitingRoom/WaitingRoom";
 import { GameRoom2, GameRoom3, GameRoom4, GameRoom5 } from "@/components/GameRoom/GameRoom";
 import Authentication from "@/components/Authentication/Authentication";
 
-import { attemptSignInFromLocal } from "@/firebase/authentication";
+import { attemptSignInFromLocal } from "@/firebase/authentication/authentication";
 
 const gameRoomLookup = {
   2: GameRoom2,
@@ -22,19 +22,25 @@ const gameRoomLookup = {
 
 export default function Home() {
   const [pageVisible, setPageVisible] = useState(true);
-
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [game, setGame] = useState(null);
   const [player, setPlayer] = useState(null);
   const [mediator, setMediator] = useState(null);
   const [stateManager, setStateManager] = useState(null);
-
   const [players, setPlayers] = useState([]);
   const [status, setStatus] = useState(null);
   const [playerHand, setPlayerHand] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState(0);
   const [currentCard, setCurrentCard] = useState(null);
+
+  const checkDocumentVisibility = () => {
+    if (document.hidden) {
+      setPageVisible(false);
+    } else {
+      setPageVisible(true);
+    }
+  };
 
   useEffect(() => {
     document.addEventListener("visibilitychange", checkDocumentVisibility);
@@ -46,7 +52,6 @@ export default function Home() {
 
   useEffect(() => {
     if (pageVisible && !isLoading && mediator && game) {
-      // do stuff
       mediator.getGameStateAfterReturningToTab();
     }
   }, [pageVisible]);
@@ -67,16 +72,6 @@ export default function Home() {
       stateManager.setPlayers(game.players);
     }
   }, [stateManager]);
-
-  function checkDocumentVisibility() {
-    document.addEventListener("visibilitychange", function () {
-      if (document.hidden) {
-        setPageVisible(false);
-      } else {
-        setPageVisible(true);
-      }
-    });
-  }
 
   return (
     <main className={"w-full h-full max-w-full max-h-full home-screen-px relative " + (status === "playing" ? "home-screen-py" : "pt-24 home-screen-pb")}>
