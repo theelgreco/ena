@@ -6,7 +6,7 @@ import Backdrop from "@mui/material/Backdrop";
 import CircularProgress from "@mui/material/CircularProgress";
 import Logo from "../Logo/Logo";
 
-import { signInAsGuest, handleEmailSignUp, handleEmailSignIn, handleGoogleSignIn, handleGoogleSignUp, signInAfterRedirect } from "@/firebase/authentication";
+import { signInAsGuest, handleEmailSignUp, handleEmailSignIn, handleGoogleSignIn, handleGoogleSignUp, signInAfterRedirect } from "@/firebase/authentication/authentication";
 
 export default function Authentication({ setUser }) {
   const [choice, setChoice] = useState(null);

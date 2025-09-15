@@ -3,14 +3,9 @@ import { useEffect } from "react";
 import GameAvatar from "../GameAvatar/GameAvatar";
 import PlayerControls from "../PlayerControls/PlayerControls";
 
-import styles from "./GameRoom.module.css";
-
 export function GameRoom2({ player, playerHand, game, mediator, currentPlayer, currentCard, stateManager }) {
-  mediator.stateManager.registerGameState();
-
   useEffect(() => {
-    console.log(mediator);
-    console.log(game);
+    mediator.stateManager.registerGameState();
   }, []);
 
   return (
@@ -56,11 +51,8 @@ export function GameRoom2({ player, playerHand, game, mediator, currentPlayer, c
 }
 
 export function GameRoom3({ player, playerHand, game, mediator, currentPlayer, currentCard, stateManager }) {
-  mediator.stateManager.registerGameState();
-
   useEffect(() => {
-    console.log(mediator);
-    console.log(game);
+    mediator.stateManager.registerGameState();
   }, []);
 
   return (
@@ -112,11 +104,8 @@ export function GameRoom3({ player, playerHand, game, mediator, currentPlayer, c
 }
 
 export function GameRoom4({ player, playerHand, game, mediator, currentPlayer, currentCard, stateManager }) {
-  mediator.stateManager.registerGameState();
-
   useEffect(() => {
-    console.log(mediator);
-    console.log(game);
+    mediator.stateManager.registerGameState();
   }, []);
 
   return (
@@ -179,11 +168,8 @@ export function GameRoom4({ player, playerHand, game, mediator, currentPlayer, c
 }
 
 export function GameRoom5({ player, playerHand, game, mediator, currentPlayer, currentCard, stateManager }) {
-  mediator.stateManager.registerGameState();
-
   useEffect(() => {
-    console.log(mediator);
-    console.log(game);
+    mediator.stateManager.registerGameState();
   }, []);
 
   return (

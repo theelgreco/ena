@@ -1,5 +1,3 @@
-import styles from "./CapacityPopup.module.css";
-
 import { Dialog, DialogTitle, List, ListItem, ListItemButton, ListItemText } from "@mui/material";
 
 export default function CapacityPopup({ onClose, selectedValue, open }) {
