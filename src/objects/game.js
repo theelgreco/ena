@@ -1,7 +1,9 @@
-import { gamesCollection, metaCollection } from "@/firebase/db";
+import { gamesCollection, metaCollection } from "@/firebase/firestore/collections";
+import { getErrorMessage } from "@/lib/errors";
 import { doc, updateDoc, getDoc, setDoc, onSnapshot } from "@firebase/firestore";
 import { isEqual } from "lodash";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export class Game {
   constructor(gameState, setGame, mediator, stateManager) {
@@ -33,7 +35,6 @@ export class Game {
   }
 
   shuffleCards(deck) {
-    console.log("shuffling");
     for (let i = deck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       const temp = deck[i];
@@ -185,24 +186,32 @@ export class GameMediator {
   }
 
   async joinGame(username, photoURL, code, setPlayer, setGame, setStateManager) {
-    this.gameDoc = doc(gamesCollection, code);
+    try {
+      this.gameDoc = doc(gamesCollection, code);
 
-    const gameState = (await getDoc(this.gameDoc)).data();
+      const gameState = (await getDoc(this.gameDoc)).data();
 
-    if (gameState.players.length <= gameState.capacity) {
-      gameState.players.push({
-        username,
-        photoURL: photoURL,
-        hand: [],
-      });
+      if (!gameState) {
+        throw new Error("Invalid game code");
+      }
+
+      if (gameState.players?.length <= gameState.capacity) {
+        gameState.players.push({
+          username,
+          photoURL: photoURL,
+          hand: [],
+        });
+      }
+
+      const stateManager = new StateManager(this, setStateManager);
+      new Game(gameState, setGame, this, stateManager);
+      new Player(username, setPlayer, this, [], false, [], stateManager);
+
+      this.registerUpdateListener();
+      await updateDoc(this.gameDoc, gameState);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
-
-    const stateManager = new StateManager(this, setStateManager);
-    new Game(gameState, setGame, this, stateManager);
-    new Player(username, setPlayer, this, [], false, [], stateManager);
-
-    this.registerUpdateListener();
-    await updateDoc(this.gameDoc, gameState);
   }
 
   async leaveGame() {
@@ -464,51 +473,38 @@ export class StateManager {
     }
 
     if (!isEqual(updatedGameState.currentCard, lastGameState.currentCard)) {
-      console.log("Updating: current card");
       this.game.currentCard = updatedGameState.currentCard;
       this.setCurrentCard(updatedGameState.currentCard);
     }
 
     if (!isEqual(updatedGameState.currentPlayer, lastGameState.currentPlayer)) {
-      console.log("Updating: current player");
-
       this.game.currentPlayer = updatedGameState.currentPlayer;
       this.setCurrentPlayer(updatedGameState.currentPlayer);
     }
 
     if (!isEqual(updatedGameState.drawPile, lastGameState.drawPile)) {
-      console.log("Updating: draw pile");
-
       this.game.drawPile = updatedGameState.drawPile;
     }
 
     if (!isEqual(updatedGameState.playedPile, lastGameState.playedPile)) {
-      console.log("Updating: played pile");
-
       this.game.playedPile = updatedGameState.playedPile;
     }
 
     if (!isEqual(updatedGameState.players.length, lastGameState.players.length)) {
-      console.log("Updating: number of players");
-
       this.game.players = updatedGameState.players;
       this.setPlayers(updatedGameState.players);
     }
 
     if (!isEqual(updatedGameState.players[this.mediator.playerIndex].hand, this.player.hand)) {
-      console.log("Updating: hand");
-
       this.player.hand = updatedGameState.players[this.mediator.playerIndex].hand;
       this.setPlayerHand(updatedGameState.players[this.mediator.playerIndex].hand);
     }
 
     if (!isEqual(updatedGameState.players, this.game.players)) {
-      console.log("Updating: players");
       this.game.players = updatedGameState.players;
     }
 
     if (!isEqual(updatedGameState.direction, this.game.direction)) {
-      console.log("Switching direction");
       this.game.direction = updatedGameState.direction;
     }
   }
