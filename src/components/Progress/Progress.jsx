@@ -26,7 +26,6 @@ export default function Progress({ startingProgress, totalTime, width, height, s
       if (status === "tick") {
         setProgress((prevProgress) => prevProgress - decrementAmount);
       } else if (status === "timeUp" && setTimeUp) {
-        console.log("Time's up!");
         setTimeUp(true);
       }
     };
@@ -45,7 +44,7 @@ export default function Progress({ startingProgress, totalTime, width, height, s
 
   //     return () => clearInterval(interval);
   //   } else if (setTimeUp) {
-  //     console.log("Time's up!");
+
   //     setTimeUp(true);
   //   }
   // }, [progress]);
