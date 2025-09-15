@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"NODE_ENV=development next dev\" \"firebase emulators:start\"",
+    "dev": "NODE_ENV=development next dev --turbopack",
     "build": "next build",
     "start": "NODE_ENV=production next start",
     "lint": "next lint"
@@ -17,10 +17,10 @@
     "clsx": "^2.1.0",
     "firebase": "^10.7.2",
     "lodash": "^4.17.21",
-    "next": "14.1.0",
+    "next": "15.5.3",
     "random-words": "^2.0.1",
-    "react": "^18",
-    "react-dom": "^18",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
