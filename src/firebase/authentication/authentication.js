@@ -1,4 +1,4 @@
-import { app } from "./firebase";
+import { app } from "../init";
 import {
   getAuth,
   browserLocalPersistence,
@@ -15,8 +15,8 @@ import {
   connectAuthEmulator,
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { usersCollection } from "./db";
-import { getAllIcons } from "./storage";
+import { usersCollection } from "../firestore/collections";
+import { getAllIcons } from "../storage/storage";
 import { generate } from "random-words";
 
 export const auth = process.env.NODE_ENV === "production" ? getAuth(app) : getAuth();

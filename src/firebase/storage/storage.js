@@ -1,4 +1,4 @@
-import { app } from "./firebase";
+import { app } from "../init";
 import { getStorage, ref, listAll, getDownloadURL, connectStorageEmulator } from "firebase/storage";
 
 const storage = process.env.NODE_ENV === "production" ? getStorage(app, app.storageBucket) : getStorage();
