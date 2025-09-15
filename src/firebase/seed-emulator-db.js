@@ -33,5 +33,6 @@ export default function seedDB() {
   deck.push({ id: uuidv4(), colour: "black", value: "wild", imagePath: `${leftStr}black-wild${rightStr}` });
   deck.push({ id: uuidv4(), colour: "black", value: "wild", imagePath: `${leftStr}black-wild${rightStr}` });
   deck.push({ id: uuidv4(), colour: "black", value: "wild", imagePath: `${leftStr}black-wild${rightStr}` });
+
   return { cards: deck, count: deck.length };
 }

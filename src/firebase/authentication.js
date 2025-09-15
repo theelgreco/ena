@@ -98,26 +98,6 @@ export const handleEmailSignUp = async (email, password, setUser, setLoading) =>
   }
 };
 
-export const handleGoogleSignIn = async (setUser) => {
-  try {
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
-  } catch (error) {
-    const errorMessage = error.message;
-    console.error("Error while signing in with Google: ", errorMessage);
-  }
-};
-
-export const handleGoogleSignUp = async (setUser) => {
-  try {
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
-  } catch (error) {
-    const errorMessage = error.message;
-    console.error("Error while signing in with Google: ", errorMessage);
-  }
-};
-
 export const signInAfterRedirect = async (setUser, setLoading) => {
   try {
     setLoading(true);
@@ -161,31 +141,31 @@ export const signUserOut = async (setUser) => {
   }
 };
 
-// export const handleGoogleSignIn = async (setUser) => {
-//   try {
-//     const provider = new GoogleAuthProvider();
-//     const result = await signInWithPopup(auth, provider);
-//     const credential = GoogleAuthProvider.credentialFromResult(result);
-//     const token = credential.accessToken;
-//     const user = result.user;
-//     setUser(user);
-//   } catch (error) {
-//     const errorMessage = error.message;
-//     console.error("Error while signing in with Google: ", errorMessage);
-//   }
-// };
+export const handleGoogleSignIn = async (setUser) => {
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const token = credential.accessToken;
+    const user = result.user;
+    setUser(user);
+  } catch (error) {
+    const errorMessage = error.message;
+    console.error("Error while signing in with Google: ", errorMessage);
+  }
+};
 
-// export const handleGoogleSignUp = async (setUser) => {
-//   try {
-//     const provider = new GoogleAuthProvider();
-//     const result = await signInWithPopup(auth, provider);
-//     const credential = GoogleAuthProvider.credentialFromResult(result);
-//     const token = credential.accessToken;
-//     const user = result.user;
-//     await generateRandomDetails(user);
-//     setUser(user);
-//   } catch (error) {
-//     const errorMessage = error.message;
-//     console.error("Error while signing in with Google: ", errorMessage);
-//   }
-// };
+export const handleGoogleSignUp = async (setUser) => {
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const token = credential.accessToken;
+    const user = result.user;
+    await generateRandomDetails(user);
+    setUser(user);
+  } catch (error) {
+    const errorMessage = error.message;
+    console.error("Error while signing in with Google: ", errorMessage);
+  }
+};

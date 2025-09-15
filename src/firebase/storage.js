@@ -8,6 +8,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export const iconsRef = ref(storage, "icons");
+
 export const getAllIcons = async () => {
   const urls = [];
   const { items } = await listAll(iconsRef);
