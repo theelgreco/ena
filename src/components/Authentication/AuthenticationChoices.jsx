@@ -19,12 +19,7 @@ export default function AuthenticationChoices({ setUser, setLoading, setOpen, em
           >
             Email
           </button>
-          <button
-            onClick={() => {
-              googleMethod(setUser);
-            }}
-            className="main-button click-buttons cartoon-text"
-          >
+          <button onClick={() => googleMethod()} className="main-button click-buttons cartoon-text">
             Google
           </button>
           <button

@@ -40,12 +40,7 @@ export default function EmailForm({ setLoading, setUser, emailFormMethod, submit
             }}
           />
         </div>
-        <button
-          onClick={async () => {
-            await emailFormMethod(email, password, setUser, setLoading);
-          }}
-          className="main-button click-buttons cartoon-text"
-        >
+        <button onClick={emailFormMethod(email, password)} className="main-button click-buttons cartoon-text">
           {submitText}
         </button>
       </form>
