@@ -7,10 +7,10 @@ if (process.env.NODE_ENV !== "production") {
   connectStorageEmulator(storage, "127.0.0.1", 9199);
 }
 
-export const iconsRef = ref(storage, "icons");
-
 export const getAllIcons = async () => {
   const urls = [];
+
+  const iconsRef = ref(storage, "icons");
   const { items } = await listAll(iconsRef);
 
   for (const item of items) {

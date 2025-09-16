@@ -6,6 +6,8 @@ import { signUserOut } from "@/firebase/authentication/authentication";
 import Logo from "../Logo/Logo";
 import PlayerAvatar from "../PlayerAvatar/PlayerAvatar";
 import CapacityPopup from "../CapacityPopup/CapacityPopup";
+import { getErrorMessage } from "@/lib/errors";
+import { toast } from "sonner";
 
 export default function HomeScreen({ game, setGame, setPlayer, setMediator, setStateManager, user, setUser }) {
   const [disableButtons, setDisableButtons] = useState(false);
@@ -58,6 +60,16 @@ export default function HomeScreen({ game, setGame, setPlayer, setMediator, setS
     }
   }
 
+  async function signOut() {
+    try {
+      await signUserOut();
+      setUser(null);
+      localStorage.clear();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  }
+
   return (
     <>
       <section className="w-full h-full dropped-section">
@@ -79,12 +91,7 @@ export default function HomeScreen({ game, setGame, setPlayer, setMediator, setS
             >
               Create game
             </button>
-            <button
-              onClick={async () => {
-                await signUserOut(setUser);
-              }}
-              className="leave-button cartoon-text"
-            >
+            <button onClick={signOut} className="leave-button cartoon-text">
               Sign out
             </button>
           </div>
