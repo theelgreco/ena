@@ -131,7 +131,7 @@ Other versions may work, but these are the versions used during development and 
    firebase init
    ```
 
-   - You will need to either select an existing firebase project or create a new one first.
+   - You will need to either select an existing firebase project or create a new one first, which will also require you signing up for Firebase if you don't already have an account.
    - When prompted, select **Firestore**, **Storage**, and **Emulators**.
    - For emulators, select **Firestore**, **Authentication**, and **Storage**.
 
