@@ -113,18 +113,29 @@ Other versions may work, but these are the versions used during development and 
 
    ```sh
    npm install
+   npm install -g firebase-tools # Installs the firebase-tools cli globally
    ```
 
-3. **Set up your Firebase project:**
+3. **Set up Firebase emulators:**
 
-   - You will need your own Firebase project to run Ena locally.
-   - Create a new project at [Firebase Console](https://console.firebase.google.com/).
-   - Set up Firestore, Authentication, and Storage in your Firebase project.
-   - Generate your Firebase config and credentials.
+   Create a `.firebase` directory:
+
+   ```sh
+   mkdir -p .firebase
+   cd .firebase
+   ```
+
+   Initialize the Firebase emulators and set up a new project:
+
+   ```sh
+   firebase init emulators
+   ```
+
+   When prompted, select **Authentication**, **Firestore**, and **Storage** emulators, and follow the instructions to create or select a Firebase project.
 
 4. **Set up environment variables:**
 
-   - Copy `.env.example` to `.env` and fill in your Firebase credentials from your own firebase project.
+   - Copy `.env.example` to `.env` and fill in your Firebase credentials from your own Firebase project.
 
 5. **Create firebase data directory (if it doesn't exist):**
 
@@ -133,13 +144,7 @@ Other versions may work, but these are the versions used during development and 
    mkdir -p data
    ```
 
-6. **Install the firebase-tools package globally if you don't have it:**
-
-   ```sh
-   npm install -g firebase-tools
-   ```
-
-7. **Start the Firebase emulators:**
+6. **Start the Firebase emulators:**
 
    You can use the provided shortcut script:
 
@@ -155,21 +160,21 @@ Other versions may work, but these are the versions used during development and 
 
    The script is just a handy shortcut for this command.
 
-8. **Populate Firebase Storage with the game assets:**
+7. **Populate Firebase Storage with the game assets:**
 
    - The file `ena-assets.zip` is included in the root of the repo.
    - Visit [http://localhost:4000/storage/{bucket-name}](http://localhost:4000/storage) (replace `{bucket-name}` with the value you set for the `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` environment variable).
    - Create two directories: `icons` and `cards`.
    - Unzip `ena-assets.zip` and upload the contents of the `icons` and `cards` folders from the unzipped archive into the corresponding directories you just created in the emulator.
 
-9. **Run the development server:**
+8. **Run the development server:**
 
    ```sh
    npm run dev
    ```
 
-10. **Open your browser:**
-    - Visit [http://localhost:3000](http://localhost:3000) to start playing.
+9. **Open your browser:**
+   - Visit [http://localhost:3000](http://localhost:3000) to start playing.
 
 ## Contributing
 
