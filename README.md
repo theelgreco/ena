@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="promo/logo.svg" style="max-width:100px; margin-bottom:10px;" />
+    <img src="promo/logo.svg" width="300px" style="margin-bottom:10px;" />
     <p>Pit it out against your friends in this game based on the classic card game UNO.</p>
     <p>Play now at: <a href="https://ena-three.vercel.app/">https://ena-three.vercel.app/</a></p>
 </div>
