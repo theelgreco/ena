@@ -95,7 +95,7 @@
 1. **Clone the repository:**
 
    ```sh
-   git clone https://github.com/yourusername/ena.git
+   git clone https://github.com/theelgreco/ena.git
    cd ena
    ```
 
