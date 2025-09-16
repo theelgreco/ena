@@ -1,12 +1,9 @@
 "use client";
-import { useEffect } from "react";
 import GameAvatar from "../GameAvatar/GameAvatar";
 import PlayerControls from "../PlayerControls/PlayerControls";
 
 export function GameRoom2({ player, playerHand, game, mediator, currentPlayer, currentCard, stateManager }) {
-  useEffect(() => {
-    mediator.stateManager.registerGameState();
-  }, []);
+  mediator.stateManager.registerGameState();
 
   return (
     <section className="w-full h-full dropped-section">
@@ -51,9 +48,7 @@ export function GameRoom2({ player, playerHand, game, mediator, currentPlayer, c
 }
 
 export function GameRoom3({ player, playerHand, game, mediator, currentPlayer, currentCard, stateManager }) {
-  useEffect(() => {
-    mediator.stateManager.registerGameState();
-  }, []);
+  mediator.stateManager.registerGameState();
 
   return (
     <section className="w-full h-full dropped-section">
@@ -104,9 +99,7 @@ export function GameRoom3({ player, playerHand, game, mediator, currentPlayer, c
 }
 
 export function GameRoom4({ player, playerHand, game, mediator, currentPlayer, currentCard, stateManager }) {
-  useEffect(() => {
-    mediator.stateManager.registerGameState();
-  }, []);
+  mediator.stateManager.registerGameState();
 
   return (
     <section className="w-full h-full dropped-section">
@@ -168,9 +161,7 @@ export function GameRoom4({ player, playerHand, game, mediator, currentPlayer, c
 }
 
 export function GameRoom5({ player, playerHand, game, mediator, currentPlayer, currentCard, stateManager }) {
-  useEffect(() => {
-    mediator.stateManager.registerGameState();
-  }, []);
+  mediator.stateManager.registerGameState();
 
   return (
     <section className="w-full h-full dropped-section">
